@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
 using MediatR;
 
-namespace Application.Shared.Pipe
+namespace Application.Shared.Pipes
 {
     /***
       * 
