@@ -1,5 +1,8 @@
 using Application.Shared.Middlewares;
+using Microsoft.AspNetCore.Identity;
 using Products.API.Extensions;
+using Products.Application.Domain;
+using Products.Application.Infrastructure.Persistence.Seeders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,5 +35,27 @@ app.UseAuthorization();
 app.UseMiddleware<ErrorHandlerMiddleware>();
 
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var loggerFactory = services.GetRequiredService<ILoggerFactory>();
+    var logger = loggerFactory.CreateLogger("app");
+    try
+    {
+        var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+        var roleManager = services.GetRequiredService<RoleManager<ApplicationRole>>();
+        logger.LogInformation("Seeding default Users and Roles");
+        await RolesSeeder.CreateRoles(roleManager);
+        await UsersSeeder.CreateUsers(userManager, roleManager);
+        logger.LogInformation("Finished Seeding Default Data");
+        logger.LogInformation("Application Starting");
+    }
+    catch (Exception exception)
+    {
+        logger.LogInformation(exception, "An error occurred seeding the DB");
+    }
+}
+
 
 app.Run();

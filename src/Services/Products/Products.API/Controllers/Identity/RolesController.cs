@@ -1,9 +1,9 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Products.Application.Constants;
 using Products.Application.Features.Identity.Roles.Commands;
 using Products.Application.Features.Identity.Roles.Queries;
+using Products.Application.Shared.Permissions;
 
 namespace Products.API.Controllers.Identity
 {
@@ -83,5 +83,6 @@ namespace Products.API.Controllers.Identity
             var result = await _mediator.Send(query);
             return Ok(result);
         }
+
     }
 }

@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Products.Application.Constants;
 using Products.Application.Domain;
+using Products.Application.Shared.Permissions;
 using System.Security.Claims;
 
-namespace Products.Application.Requirements
+namespace Products.Application.Infrastructure.Authentication.Requirements
 {
     public class PermissionRequirementHandler : AuthorizationHandler<PermissionRequirement>
     {
@@ -19,11 +19,13 @@ namespace Products.Application.Requirements
 
         protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, PermissionRequirement requirement)
         {
-            if (context.User == null)
+            if (context.User == null || context.User?.FindFirstValue("uid") == null)
             {
                 return;
             }
+
             var userId = context.User?.FindFirstValue("uid");
+
             var user = await _userManager.FindByIdAsync(userId);
             var role = await _roleManager.FindByIdAsync(user.RoleId);
 

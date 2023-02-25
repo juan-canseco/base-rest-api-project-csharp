@@ -7,16 +7,15 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Products.Application;
-using Products.Application.Constants;
 using Products.Application.Domain;
 using Products.Application.Infrastructure.Authentication;
+using Products.Application.Infrastructure.Authentication.Requirements;
 using Products.Application.Infrastructure.Persistence;
 using Products.Application.Interfaces.Authentication;
 using Products.Application.Interfaces.Persistence;
-using Products.Application.Requirements;
 using Products.Application.Shared;
+using Products.Application.Shared.Permissions;
 using System.Text;
-using System.Text.Json;
 using Utils.Time;
 
 namespace Products.API.Extensions
@@ -80,51 +79,6 @@ namespace Products.API.Extensions
                     ValidIssuer = configuration["JWTSettings:Issuer"],
                     ValidAudience = configuration["JWTSettings:Audience"],
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWTSettings:Key"]))
-                };
-
-                options.Events = new JwtBearerEvents()
-                {
-                    OnAuthenticationFailed = c =>
-                    {
-                        c.NoResult();
-                        c.Response.StatusCode = 500;
-                        c.Response.ContentType = "application/json";
-                        var responseModel = new
-                        {
-                            Title = "Authentication Failed",
-                            Message = c.Exception.ToString(),
-                            Succeeded = false
-                        };
-                        var response = JsonSerializer.Serialize(responseModel);
-                        return c.Response.WriteAsync(response);
-                    },
-                    OnChallenge = context =>
-                    {
-                        context.HandleResponse();
-                        context.Response.StatusCode = 401;
-                        context.Response.ContentType = "application/json";
-                        var responseModel = new
-                        {
-                            Title = "Authorization Failed",
-                            Message = "You are not Authorized",
-                            Succeeded = false
-                        };
-                        var result = JsonSerializer.Serialize(responseModel);
-                        return context.Response.WriteAsync(result);
-                    },
-                    OnForbidden = context =>
-                    {
-                        context.Response.StatusCode = 403;
-                        context.Response.ContentType = "application/json";
-                        var responseModel = new
-                        {
-                            Title = "Authorization Failed",
-                            Message = "You are not authorized to access this resource",
-                            Succeeded = false
-                        };
-                        var result = JsonSerializer.Serialize(responseModel);
-                        return context.Response.WriteAsync(result);
-                    },
                 };
             });
         }

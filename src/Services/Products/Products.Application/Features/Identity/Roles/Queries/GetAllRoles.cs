@@ -14,25 +14,9 @@ namespace Products.Application.Features.Identity.Roles.Queries
     {
         public int PageNumber { get; set; } = 1;
         public int PageSize { get; set; } = 10;
-        public string OrderBy { get; set; } = default!;
-        public string SortOrder { get; set; } = default!;
-        public string Filter { get; set; } = default!;
-    }
-
-    public class GetAllRolesQueryValidator : AbstractValidator<GetAllRolesQuery>
-    {
-        public GetAllRolesQueryValidator() 
-        {
-            RuleFor(r => r)
-                .Must(r => MustBeGreaterThanZero(r.PageNumber))
-                .WithMessage("'PageNumber' must be greater than 0");
-
-            RuleFor(r => r)
-                .Must(r => MustBeGreaterThanZero(r.PageSize))
-                .WithMessage("'PageSize' must be greater than 0.");
-        }
-
-        private bool MustBeGreaterThanZero(int value) => value > 0;
+        public string? OrderBy { get; set; } = default!;
+        public string? SortOrder { get; set; } = default!;
+        public string? Filter { get; set; } = default!;
     }
 
     public class GetAllRolesHandler : IRequestHandler<GetAllRolesQuery, PagedList<GetAllRolesResponse>>
@@ -45,7 +29,7 @@ namespace Products.Application.Features.Identity.Roles.Queries
             _roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
-        private Expression<Func<ApplicationRole, object>> GetOrderByField(string sortBy)
+        private Expression<Func<ApplicationRole, object>> GetOrderByField(string? sortBy)
         {
             if (sortBy == "id")
             {

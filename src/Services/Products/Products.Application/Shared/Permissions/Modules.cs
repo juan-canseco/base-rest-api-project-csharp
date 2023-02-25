@@ -1,4 +1,4 @@
-﻿namespace Products.Application.Constants
+﻿namespace Products.Application.Shared.Permissions
 {
     public class Modules
     {

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 
-namespace Products.Application.Requirements
+namespace Products.Application.Infrastructure.Authentication.Requirements
 {
     public class PermissionRequirement : IAuthorizationRequirement
     {

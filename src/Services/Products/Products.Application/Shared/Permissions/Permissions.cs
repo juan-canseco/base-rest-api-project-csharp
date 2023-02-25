@@ -1,6 +1,6 @@
 ﻿using Application.Shared.Exceptions;
 
-namespace Products.Application.Constants
+namespace Products.Application.Shared.Permissions
 {
     public class Permissions
     {

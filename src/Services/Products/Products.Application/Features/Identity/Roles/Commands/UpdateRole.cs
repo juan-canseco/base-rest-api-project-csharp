@@ -3,8 +3,8 @@ using AutoMapper;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
-using Products.Application.Constants;
 using Products.Application.Domain;
+using Products.Application.Shared.Permissions;
 using System.Security.Claims;
 
 namespace Products.Application.Features.Identity.Roles.Commands
@@ -15,19 +15,14 @@ namespace Products.Application.Features.Identity.Roles.Commands
         public UpdateRoleCommandValidator()
         {
             RuleFor(r => r.Name)
-              .NotEmpty()
-              .NotNull()
-              .WithMessage("'Name' is required.");
+              .NotEmpty();
 
             RuleFor(r => r.Description)
-                .NotEmpty()
-                .NotNull()
-                .WithMessage("'Description' is required.");
+                .NotEmpty();
 
             RuleFor(r => r.Permissions)
                 .NotNull()
-                .NotEmpty()
-                .WithMessage("'Permissions' is required.");
+                .NotEmpty();
 
             RuleFor(r => r.Permissions)
                 .Must(r => PermissionsValidator.Validate(r))

@@ -1,11 +1,8 @@
-﻿using Application.Shared.Extensions;
-using Application.Shared.Models;
+﻿using Application.Shared.Models;
+using Dapper;
 using FluentValidation;
 using MediatR;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Products.Application.Domain;
-using System.Linq.Expressions;
+using Products.Application.Interfaces.Persistence;
 
 namespace Products.Application.Features.Identity.Users.Queries
 {
@@ -13,110 +10,99 @@ namespace Products.Application.Features.Identity.Users.Queries
     {
         public int PageNumber { get; set; } = 1;
         public int PageSize { get; set; } = 10;
-        public string OrderBy { get; set; } = default!;
-        public string SortOrder { get; set; } = default!;
-        public string Filter { get; set; } = default!;
+        public string? OrderBy { get; set; } = default!;
+        public string? SortOrder { get; set; } = default!;
+        public string? Filter { get; set; } = default!;
     }
 
     public class GetAllUsersQueryValidator : AbstractValidator<GetAllUsersQuery>
     {
-        public GetAllUsersQueryValidator()
+        public GetAllUsersQueryValidator() 
         {
-            RuleFor(r => r)
-              .Must(r => MustBeGreaterThanZero(r.PageNumber))
-              .WithMessage("'PageNumber' must be greater than 0");
+            RuleFor(r => r.OrderBy)
+                .Must(r => MustBeNullOrExistsInSet(r))
+                .WithMessage("'OrderBy' invalid field.");
 
-            RuleFor(r => r)
-                .Must(r => MustBeGreaterThanZero(r.PageSize))
-                .WithMessage("'PageSize' must be greater than 0.");
+            RuleFor(r => r.PageNumber)
+                .GreaterThan(0);
+
+            RuleFor(r => r.PageSize)
+                .GreaterThan(0);
         }
-        private bool MustBeGreaterThanZero(int value) => value > 0;
+
+        public bool MustBeNullOrExistsInSet(string? sortBy)
+        {
+            if (string.IsNullOrEmpty(sortBy))
+            {
+                return true;
+            }
+            var set = new HashSet<string>
+            {
+                "id",
+                "fullname",
+                "role",
+                "active"
+            };
+            return set.Contains(sortBy.ToLower());
+        }
     }
 
     public class GetAllUsersHandler : IRequestHandler<GetAllUsersQuery, PagedList<GetAllUsersResponse>>
     {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly RoleManager<ApplicationRole> _roleManager;
+        private readonly IDapperContext _context;
 
-        public GetAllUsersHandler(UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager)
+        public GetAllUsersHandler(IDapperContext context)
         {
-            _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
-            _roleManager = roleManager ?? throw new ArgumentNullException(nameof(roleManager));
+            _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        // Find an easiest way to do this
-        private Expression<Func<ApplicationUser, object>> GetOrderByField(string sortBy)
+        private string GetOrderByField(string? sortBy)
         {
-            var sortField = sortBy.ToLower();
-            if (sortField == "fullname")
+            var sortFields = new Dictionary<string, string>
             {
-                return r => r.Fullname;
-            }
-            if (sortField == "role")
-            {
-                return r => r.RoleId;
-            }
-            if (sortField == "active")
-            {
-                return r => r.Active;
-            }
-            if (sortField == "createdat")
-            {
-                return r => EF.Property<DateTime>(r, "CreatedAt");
-            }
-            if (sortField == "updatedat")
-            {
-                return r => EF.Property<DateTime>(r, "UpdatedAt");
-            }
-            if (sortField == "createdby")
-            {
-                return r => EF.Property<string>(r, "CreatedBy");
-            }
-            if (sortField == "updatedby")
-            {
-                return r => EF.Property<string>(r, "UpdatedBy");
-            }
-            return r => r.Fullname;
+                { "id", "u.Id" },
+                { "fullname", "u.Fullname" },
+                { "active", "u.Active" },
+                { "role", "r.Name" }
+            };
+            return sortFields[sortBy ?? "fullname"];
         }
 
         public async Task<PagedList<GetAllUsersResponse>> Handle(GetAllUsersQuery request, CancellationToken cancellationToken)
         {
             var orderBy = GetOrderByField(request.OrderBy);
             var filter = string.IsNullOrEmpty(request.Filter) ? "" : request.Filter;
-            var sortOrder = request.SortOrder == "desc" ? request.SortOrder : "asc";
+            var sortOrder = request.SortOrder == "desc" ? "DESC" : "ASC";
 
-            IQueryable<GetAllUsersResponse> query = from user in _userManager.Users
-                                                        join role in _roleManager.Roles
-                                                        on user.RoleId equals role.Id
-                                                        where EF.Functions.Like(user.Fullname, $"%{filter}%")
-                                                        orderby orderBy ascending
-                                                        select new GetAllUsersResponse
-                                                        {
-                                                            Id = user.Id,
-                                                            Fullname = user.Fullname,
-                                                            Role = role.Name,
-                                                            Active = user.Active
-                                                        };
+            var query = $@"SELECT u.Id, u.Fullname, r.Name AS Role, u.Active 
+                           FROM [Identity].[Users] u INNER JOIN [Identity].[Roles] r
+                           ON u.RoleId = r.Id
+                           WHERE u.Fullname LIKE CONCAT('%', @Filter, '%')
+                           ORDER BY {orderBy} {sortOrder}
+                           OFFSET @Offset ROWS
+                           FETCH NEXT @PageSize ROWS ONLY;
+                           
+                           SELECT COUNT(*) FROM [Identity].[Users] u
+                           INNER JOIN [Identity].[Roles] r
+                           ON u.RoleId = r.Id
+                           WHERE u.Fullname LIKE CONCAT('%', @Filter, '%');";
 
-            if (request.SortOrder == "desc")
+            var @params = new
             {
-                query = from user in _userManager.Users
-                            join role in _roleManager.Roles
-                            on user.RoleId equals role.Id
-                            where EF.Functions.Like(user.Fullname, $"%{filter}%")
-                            orderby orderBy descending
-                            select new GetAllUsersResponse
-                            {
-                                Id = user.Id,
-                                Fullname = user.Fullname,
-                                Role = role.Name,
-                                Active = user.Active
-                            };
+                PageSize = request.PageSize,
+                Offset = (request.PageNumber - 1) * request.PageSize,
+                Filter = filter
+            };
 
+            using (var connection = _context.CreateConnection())
+            {
+                using (var multi = await connection.QueryMultipleAsync(query, @params))
+                {
+                    var items = multi.Read<GetAllUsersResponse>().ToList();
+                    var count = multi.ReadFirst<int>();
+                    return new PagedList<GetAllUsersResponse>(items, count, request.PageNumber, request.PageSize);
+                }
             }
-
-            return await query.AsNoTracking().ToPagedListAsync(request.PageNumber, request.PageSize);
-
         }
     }
 
@@ -124,7 +110,6 @@ namespace Products.Application.Features.Identity.Users.Queries
     {
         public string Id { get; set; } = default!;
         public string Fullname { get; set; } = default!;
-
         public string Role { get; set; } = default!;
         public bool Active { get; set; } = default!;
     }

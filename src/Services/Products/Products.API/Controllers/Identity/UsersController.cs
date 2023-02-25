@@ -1,9 +1,9 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Products.Application.Constants;
 using Products.Application.Features.Identity.Users.Commands;
 using Products.Application.Features.Identity.Users.Queries;
+using Products.Application.Shared.Permissions;
 
 namespace Products.API.Controllers.Identity
 {
