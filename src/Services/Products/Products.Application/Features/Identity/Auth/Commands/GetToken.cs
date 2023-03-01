@@ -69,14 +69,12 @@ namespace Products.Application.Features.Identity.Auth.Commands
             return new GetTokenResponse
             {
                 UserId = user.Id,
-                RoleId = role.Id,
+                Role = role.Name,
                 Email = user.Email,
                 Fullname = user.Fullname,
                 Permissions = permissions,
                 IsVerified = user.EmailConfirmed,
-                Token = new JwtSecurityTokenHandler().WriteToken(securityToken),
-                IssuedAt = jwtSecurityToken.ValidFrom.ToLocalTime(),
-                ExpiresAt = jwtSecurityToken.ValidTo.ToLocalTime()
+                Token = new JwtSecurityTokenHandler().WriteToken(securityToken)
             };
 
         }
@@ -143,13 +141,11 @@ namespace Products.Application.Features.Identity.Auth.Commands
     public class GetTokenResponse
     {
         public string UserId { get; set; } = default!;
-        public string RoleId { get; set; } = default!;
+        public string Role { get; set; } = default!;
         public string Email { get; set; } = default!;
         public string Fullname { get; set; } = default!;
         public List<string> Permissions { get; set; } = default!;
         public bool IsVerified { get; set; } = default!;
         public string Token { get; set; } = default!;
-        public DateTime IssuedAt { get; set; } = default!;
-        public DateTime ExpiresAt { get; set; } = default!;
     }
 }

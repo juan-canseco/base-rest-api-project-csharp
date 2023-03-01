@@ -6,6 +6,7 @@ using Products.Application.Interfaces.Persistence;
 
 namespace Products.Application.Features.Identity.Users.Queries
 {
+    // https://www.davepaquette.com/archive/2019/01/28/paging-large-result-sets-with-dapper-and-sql-server.aspx
     public class GetAllUsersQuery : IRequest<PagedList<GetAllUsersResponse>>
     {
         public int PageNumber { get; set; } = 1;

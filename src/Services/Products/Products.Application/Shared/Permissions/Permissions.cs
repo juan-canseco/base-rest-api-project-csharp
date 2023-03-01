@@ -4,6 +4,16 @@ namespace Products.Application.Shared.Permissions
 {
     public class Permissions
     {
+        public class Dashboard
+        {
+            public const string View = "Permissions.Dashboard.View";
+
+            public static IReadOnlyCollection<string> All = new List<string>()
+            {
+                View
+            }.AsReadOnly();
+        }
+
         public class Users
         {
             public const string View = "Permissions.Users.View";
@@ -64,6 +74,7 @@ namespace Products.Application.Shared.Permissions
                 permissions.AddRange(Users.All);
                 permissions.AddRange(Roles.All);
                 permissions.AddRange(Products.All);
+                permissions.AddRange(Dashboard.All);
                 return permissions.AsReadOnly();
             }
 
@@ -71,6 +82,8 @@ namespace Products.Application.Shared.Permissions
             {
                 switch (module)
                 {
+                    case Modules.Dashboard:
+                        return Dashboard.All;
                     case Modules.Users:
                         return Users.All;
                     case Modules.Roles:

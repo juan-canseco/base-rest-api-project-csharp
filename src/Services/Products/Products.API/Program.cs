@@ -6,7 +6,13 @@ using Products.Application.Infrastructure.Persistence.Seeders;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var myCors = "AppCors";
+
 // Add services to the container.
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(myCors, options=> { options.WithOrigins("http://localhost:4200").AllowAnyHeader().AllowAnyMethod(); });
+});
 builder.Services.AddPersistence(builder.Configuration);
 builder.Services.AddPipes();
 builder.Services.AddUtils();
@@ -28,6 +34,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors(myCors);
 
 app.UseAuthentication();
 app.UseAuthorization();
