@@ -7,6 +7,7 @@
             PageIndex = pageIndex;
             TotalPages = (int)Math.Ceiling(count / (double)pageSize);
             Items = items;
+            RowsCount = count;
         }
 
         // Required for mapping
@@ -18,6 +19,7 @@
         public IEnumerable<TEntity> Items { get; private set; }
         public int PageIndex { get; private set; }
         public int TotalPages { get; private set; }
+        public long RowsCount { get; private set; }
         public bool HasPreviousPage => PageIndex > 1;
         public bool HasNextPage => PageIndex < TotalPages;
     }
