@@ -78,11 +78,18 @@ namespace Products.API.Controllers.Identity
         }
         [Authorize(Policy = Permissions.Roles.View)]
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] GetAllRolesQuery query)
+        public async Task<IActionResult> GetAllPaginated([FromQuery] GeRolesQuery query)
         {
             var result = await _mediator.Send(query);
             return Ok(result);
         }
 
+        [Authorize(Policy = Permissions.Roles.View)]
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAll()
+        {
+            var result = await _mediator.Send(new GetAllRolesQuery());
+            return Ok(result);
+        }
     }
 }

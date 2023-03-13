@@ -128,11 +128,11 @@ namespace Products.Application.Features.Identity.Users.Commands
 
             RuleFor(r => r.Password)
                 .MinimumLength(6)
-                .WithMessage("The length of the LastName is too short. The minimum length must be 6 characters.");
+                .WithMessage("The length of the Password is too short. The minimum length must be 6 characters.");
 
             RuleFor(r => r.Password)
                 .MaximumLength(30)
-                .WithMessage("The length of the LastName is too long. The maximum length must be 30 characters.");
+                .WithMessage("The length of the Password is too long. The maximum length must be 30 characters.");
         }
     }
 
