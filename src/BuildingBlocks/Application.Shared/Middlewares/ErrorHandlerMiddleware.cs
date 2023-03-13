@@ -51,6 +51,7 @@ namespace Application.Shared.Middlewares
                 DomainException => (int)HttpStatusCode.UnprocessableEntity,
                 NotFoundException => (int)HttpStatusCode.NotFound,
                 ValidationException => (int)HttpStatusCode.BadRequest,
+                IdentityException => (int)HttpStatusCode.UnprocessableEntity,
                 _ => (int)HttpStatusCode.InternalServerError
             };
 
